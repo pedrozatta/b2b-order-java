@@ -8,16 +8,6 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:b2b}
     password: ${SPRING_DATASOURCE_PASSWORD:b2b}
     driver-class-name: org.postgresql.Driver
-    hikari:
-      pool-name: MainPool
-      minimum-idle: 0
-      maximum-pool-size: 3
-      connection-timeout: 10000
-      idle-timeout: 60000
-      max-lifetime: 300000
-      initialization-fail-timeout: 0
-      leak-detection-threshold: 10000
-      validation-timeout: 3000
   jpa:
     hibernate:
       ddl-auto: validate
