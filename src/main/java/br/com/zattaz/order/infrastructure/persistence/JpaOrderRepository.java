@@ -7,6 +7,7 @@ import br.com.zattaz.order.domain.repository.OrderRepository;
 import br.com.zattaz.order.infrastructure.persistence.mapper.OrderEntityMapper;
 import br.com.zattaz.order.infrastructure.persistence.model.OrderEntity;
 import br.com.zattaz.order.infrastructure.persistence.repository.OrderJpaDataRepository;
+import br.com.zattaz.order.infrastructure.persistence.repository.OrderSpecifications;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,7 +45,8 @@ public class JpaOrderRepository implements OrderRepository {
 
     @Override
     public Page<Order> findByFilters(OrderStatus status, Instant from, Instant to, int page, int size) {
-        var result = repository.findByFilters(status, from, to, PageRequest.of(page, size));
+        var result = repository.findAll(
+                OrderSpecifications.withFilters(status, from, to), PageRequest.of(page, size));
         return new Page<>(
                 result.getContent().stream().map(mapper::toDomain).toList(),
                 result.getTotalElements(),
