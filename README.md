@@ -45,7 +45,7 @@ No Swagger, clique em **Authorize** e use:
 | Spring Boot | 3.4.x |
 | Build | Gradle (Kotlin DSL) |
 | Persistência | Spring Data JPA + Flyway |
-| Banco local / testes | H2 arquivo `./data/db/orders` (profile `h2`); in-memory (`local`/testes); PostgreSQL (default/Docker) |
+| Banco local / testes | H2 in-memory (`local`/testes); PostgreSQL (default/Docker) |
 | Banco Docker / stage-like | PostgreSQL |
 | Segurança | HTTP Basic Authentication |
 | API docs | springdoc-openapi (Swagger UI) |
@@ -130,28 +130,9 @@ Para derrubar:
 docker compose down
 ```
 
-### Opção 2 — Local com H2 em arquivo (profile `h2`)
-
-```bash
-./gradlew bootRun --args='--spring.profiles.active=h2'
-```
-
-O profile `h2` persiste os dados em **`./data/db/orders`** (arquivo H2, modo PostgreSQL).  
-O diretório é criado automaticamente na pasta do projeto.
-
-- Console H2: `http://localhost:8080/h2-console`
-- JDBC URL no console: `jdbc:h2:file:./data/db/orders`
-
-Para usar o path absoluto `/data/db/orders` (ex.: container com volume montado):
-
-```bash
-export H2_DB_PATH=/data/db/orders
-./gradlew bootRun --args='--spring.profiles.active=h2'
-```
-
 > No macOS, `/data` costuma ser read-only; use o default `./data/db/orders` em desenvolvimento local.
 
-### Opção 2b — Local com H2 em memória (profile `local`)
+### Opção 2 — Local com H2 em memória (profile `local`)
 
 ```bash
 ./gradlew bootRun --args='--spring.profiles.active=local'
@@ -159,27 +140,6 @@ export H2_DB_PATH=/data/db/orders
 
 O profile `local` usa H2 em memória (não exige PostgreSQL nem diretório em disco).
 
-### Opção 3 — Local apontando para PostgreSQL
-
-```bash
-export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/b2b_order
-export SPRING_DATASOURCE_USERNAME=b2b
-export SPRING_DATASOURCE_PASSWORD=b2b
-./gradlew bootRun
-```
-
-### Opção 4 — Railway
-
-O deploy usa o `Dockerfile` (`railway.json`). Variáveis recomendadas:
-
-| Variável | Exemplo |
-|---|---|
-| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://HOST:PORT/DB` |
-| `SPRING_DATASOURCE_USERNAME` | usuário do Postgres |
-| `SPRING_DATASOURCE_PASSWORD` | senha do Postgres |
-| `PORT` | definido automaticamente pelo Railway |
-
-Healthcheck: `GET /actuator/health`
 
 ### Build
 
@@ -387,8 +347,6 @@ Transição inválida retorna erro de negócio (tipicamente **400** ou **409**).
    - Se ainda `PENDING`: não há estorno (nada foi debitado).
    - Se já houve débito (`APPROVED` ou posterior cancelável): estorna o valor.
 5. Conflito de versão (concorrência) → **409 Conflict**.
-
-> **Advertência — concorrência no crédito.** A criação do pedido (`PUT /orders/{orderId}`) **apenas consulta** o saldo (`availableCredit ≥ totalAmount`) e **não reserva** crédito nem incrementa a `version` do parceiro. Vários pedidos `PENDING` do mesmo parceiro podem somar mais do que o limite. O débito ocorre só na aprovação; se duas aprovações competirem pelo mesmo saldo, uma conclui e a outra recebe **409**. No retry, o saldo já atualizado é relido e a operação pode falhar por crédito insuficiente (**400**). Não há `SELECT FOR UPDATE` nem decremento atômico no SQL.
 
 ### Notificações
 
