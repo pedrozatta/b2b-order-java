@@ -4,6 +4,19 @@ Microserviço REST para recebimento, processamento e gerenciamento de pedidos B2
 
 > API only — não há interface de usuário.
 
+### Ambiente publicado (POC)
+
+A aplicação está disponível em:
+
+- **API / Swagger:** [https://b2border.poc.u8u.com.br/](https://b2border.poc.u8u.com.br/)
+- **Swagger UI:** [https://b2border.poc.u8u.com.br/swagger-ui.html](https://b2border.poc.u8u.com.br/swagger-ui.html)
+
+No Swagger, clique em **Authorize** e use:
+
+| Usuário | Senha |
+|---|---|
+| `admin` | `admin123` |
+
 ---
 
 ## Sumário
@@ -184,12 +197,22 @@ Healthcheck: `GET /actuator/health`
 
 ## Documentação da API
 
+### POC (público)
+
+- **Base URL:** [https://b2border.poc.u8u.com.br/](https://b2border.poc.u8u.com.br/)
+- **Swagger UI:** [https://b2border.poc.u8u.com.br/swagger-ui.html](https://b2border.poc.u8u.com.br/swagger-ui.html)
+- **OpenAPI:** [https://b2border.poc.u8u.com.br/v3/api-docs](https://b2border.poc.u8u.com.br/v3/api-docs)
+
+**Authorize:** `admin` / `admin123`
+
+### Local
+
 Com a aplicação no ar:
 
 - **Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 - **OpenAPI:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
 
-No Swagger, use **Authorize** com as credenciais Basic Auth.
+No Swagger, use **Authorize** com as mesmas credenciais Basic Auth (`admin` / `admin123`).
 
 ---
 
