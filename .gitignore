@@ -26,5 +26,6 @@ replay_pid*
 build/
 .idea/
 .jdk/
+data/
 *.iml
 .DS_Store
