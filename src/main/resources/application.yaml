@@ -28,6 +28,22 @@ app:
     user:
       username: admin
       password: admin123
+  cors:
+    allowed-origin-patterns:
+      - "*"
+    allowed-methods:
+      - GET
+      - PUT
+      - POST
+      - PATCH
+      - DELETE
+      - OPTIONS
+    allowed-headers:
+      - "*"
+    exposed-headers:
+      - X-Trace-Id
+    max-age: 3600
+    allow-credentials: true
 
 management:
   endpoints:
