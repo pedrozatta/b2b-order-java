@@ -2,5 +2,6 @@
 .gradle
 build
 .idea
+.jdk
 *.iml
 .DS_Store

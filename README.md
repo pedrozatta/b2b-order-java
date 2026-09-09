@@ -134,6 +134,19 @@ export SPRING_DATASOURCE_PASSWORD=b2b
 ./gradlew bootRun
 ```
 
+### Opção 4 — Railway
+
+O deploy usa o `Dockerfile` (`railway.json`). Variáveis recomendadas:
+
+| Variável | Exemplo |
+|---|---|
+| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://HOST:PORT/DB` |
+| `SPRING_DATASOURCE_USERNAME` | usuário do Postgres |
+| `SPRING_DATASOURCE_PASSWORD` | senha do Postgres |
+| `PORT` | definido automaticamente pelo Railway |
+
+Healthcheck: `GET /actuator/health`
+
 ### Build
 
 ```bash
