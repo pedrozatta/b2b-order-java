@@ -1,0 +1,138 @@
+name: Pull Request
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build, Tests and Coverage Gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: gradle
+
+      - name: Grant execute permission for Gradle Wrapper
+        run: chmod +x gradlew
+
+      - name: Build, test and verify coverage (>= 70%)
+        run: ./gradlew clean build jacocoTestReport jacocoTestCoverageVerification --no-daemon
+
+      - name: Publish coverage summary
+        if: always()
+        run: |
+          REPORT="build/reports/jacoco/test/jacocoTestReport.xml"
+          if [ ! -f "$REPORT" ]; then
+            {
+              echo "## Coverage"
+              echo ""
+              echo "Relatório de cobertura não encontrado."
+              echo ""
+              echo "<!-- b2b-order-java-coverage -->"
+            } | tee coverage-comment.md >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python3 - <<'PY' | tee coverage-comment.md >> "$GITHUB_STEP_SUMMARY"
+          import xml.etree.ElementTree as ET
+
+          root = ET.parse("build/reports/jacoco/test/jacocoTestReport.xml").getroot()
+          counters = {c.get("type"): c for c in root.findall("counter")}
+          gate = 70.0
+
+          def values(counter_type: str):
+              counter = counters.get(counter_type)
+              if counter is None:
+                  return None, "N/A"
+              missed = int(counter.get("missed", 0))
+              covered = int(counter.get("covered", 0))
+              total = missed + covered
+              if total == 0:
+                  return 0.0, "0.0% (0/0)"
+              pct = covered * 100 / total
+              return pct, f"{pct:.1f}% ({covered}/{total})"
+
+          line_pct, line_label = values("LINE")
+          _, instruction_label = values("INSTRUCTION")
+          _, branch_label = values("BRANCH")
+          _, method_label = values("METHOD")
+          _, class_label = values("CLASS")
+
+          gate_ok = line_pct is not None and line_pct >= gate
+          status = "✅ Aprovado" if gate_ok else "❌ Reprovado"
+
+          print("## Coverage")
+          print()
+          print(f"{status} — gate mínimo de **{gate:.0f}%** em linhas")
+          print()
+          print("| Metric | Value |")
+          print("|---|---|")
+          print(f"| Instructions | {instruction_label} |")
+          print(f"| Branches | {branch_label} |")
+          print(f"| Lines | {line_label} |")
+          print(f"| Methods | {method_label} |")
+          print(f"| Classes | {class_label} |")
+          print()
+          print("Relatório completo disponível no artifact `jacoco-report`.")
+          print()
+          print("<!-- b2b-order-java-coverage -->")
+          PY
+
+      - name: Comment coverage on PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- b2b-order-java-coverage -->';
+            const body = fs.existsSync('coverage-comment.md')
+              ? fs.readFileSync('coverage-comment.md', 'utf8')
+              : '## Coverage\n\nRelatório de cobertura não encontrado.\n\n<!-- b2b-order-java-coverage -->';
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find((comment) => comment.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Upload JaCoCo report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report-pr-${{ github.event.pull_request.number }}
+          path: |
+            build/reports/jacoco/test/html/
+            build/reports/jacoco/test/jacocoTestReport.xml
+          if-no-files-found: warn

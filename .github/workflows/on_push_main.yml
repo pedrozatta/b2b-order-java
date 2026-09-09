@@ -23,8 +23,8 @@ jobs:
       - name: Grant execute permission for Gradle Wrapper
         run: chmod +x gradlew
 
-      - name: Build, test and generate coverage
-        run: ./gradlew clean build jacocoTestReport --no-daemon
+      - name: Build, test and verify coverage (>= 70%)
+        run: ./gradlew clean build jacocoTestReport jacocoTestCoverageVerification --no-daemon
 
       - name: Publish coverage summary
         if: always()

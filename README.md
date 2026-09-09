@@ -651,11 +651,20 @@ Cenários relevantes: CRUD de produto, cadastro/consulta de parceiro com crédit
 
 ### CI (GitHub Actions)
 
-A cada push/merge em `main`, o workflow [`.github/workflows/on_push_main.yml`](.github/workflows/on_push_main.yml):
+| Evento | Workflow | O que faz |
+|---|---|---|
+| Push/merge em `main` | [`.github/workflows/on_push_main.yml`](.github/workflows/on_push_main.yml) | Build, testes, cobertura e artifact |
+| Pull request para `main` | [`.github/workflows/on_pull_request_main.yml`](.github/workflows/on_pull_request_main.yml) | Build, testes, comentário de cobertura no PR e **gate ≥ 70%** de linhas |
 
-1. Executa `./gradlew clean build jacocoTestReport`
-2. Publica o resumo de cobertura no **Job Summary**
-3. Anexa o relatório JaCoCo (HTML + XML) como artifact `jacoco-report`
+O gate de cobertura é enforced pelo JaCoCo (`jacocoTestCoverageVerification`). Se a cobertura de linhas for inferior a **70%**, o job falha e o merge fica bloqueado quando o check for obrigatório.
+
+Para exigir o sucesso do check antes do merge, configure no GitHub:
+
+**Settings → Branches → Branch protection rule** (branch `main`):
+
+- Require a pull request before merging
+- Require status checks to pass before merging
+- Status check obrigatório: `Build, Tests and Coverage Gate`
 
 ---
 
